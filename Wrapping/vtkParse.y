@@ -1133,6 +1133,16 @@ void scopeSig(const char *scope)
   pointerScopeStack[pointerScopeDepth++] = vtkstrdup(scope);
 }
 
+/* just save the scope */
+void setScope(const char *scope)
+{
+  if (scope[0] == '\0')
+    {
+    scope = 0;
+    }
+  pointerScopeStack[pointerScopeDepth++] = vtkstrdup(scope);
+}
+
 /* get the scope back */
 const char *getScope()
 {
@@ -2216,16 +2226,20 @@ direct_declarator:
 
 p_or_lp_or_la:
     '(' { postSig("("); scopeSig(""); $<integer>$ = 0; }
-  | LP { postSig("("); scopeSig($<str>1); postSig("*");
-         $<integer>$ = VTK_PARSE_POINTER; }
-  | LA { postSig("("); scopeSig($<str>1); postSig("&");
-         $<integer>$ = VTK_PARSE_REF; }
+  | lp_or_la { $<integer>$ = $<integer>1; }
 
 lp_or_la:
     LP { postSig("("); scopeSig($<str>1); postSig("*");
          $<integer>$ = VTK_PARSE_POINTER; }
   | LA { postSig("("); scopeSig($<str>1); postSig("&");
          $<integer>$ = VTK_PARSE_REF; }
+  | lp_sig nested_name_specifier '*' { postSig("*"); setScope($<str>2);
+         $<integer>$ = VTK_PARSE_POINTER; }
+  | lp_sig nested_name_specifier '&' { postSig("&"); setScope($<str>2);
+         $<integer>$ = VTK_PARSE_REF; }
+
+lp_sig:
+    '(' { postSig("("); }
 
 opt_array_or_parameters: { $<integer>$ = 0; }
   | '(' { pushFunction(); postSig("("); } parameter_declaration_clause ')'
@@ -3139,6 +3153,7 @@ ignored_parentheses:
 
 ignored_left_parenthesis:
   '(' | LP | LA
+
 
 %%
 #include <string.h>
