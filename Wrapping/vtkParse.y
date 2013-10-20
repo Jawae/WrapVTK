@@ -1320,6 +1320,8 @@ unsigned int add_indirection_to_array(unsigned int type)
  * Start of yacc section
  */
 
+/* Use the GLR parser algorithm for tricky cases */
+%glr-parser
 
 /* The parser will shift/reduce values <str> or <integer>, where
    <str> is for IDs and <integer> is for types, modifiers, etc. */
@@ -2970,6 +2972,7 @@ constant_expression:
 constant_expression_item:
     common_bracket_item
   | angle_brackets_sig
+  | '<' { postSig("< "); }
   | '>' { postSig("> "); }
   | OP_RSHIFT_A { postSig(">"); }
 
